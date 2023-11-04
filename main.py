@@ -1,9 +1,4 @@
-import disnake
-from disnake.ext import commands
-from disnake.ext.commands import *
-import json
-import os
-
+from yuno_import import *
 # API key
 from apiKey import *
 

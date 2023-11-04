@@ -1,16 +1,4 @@
-import disnake
-from disnake.ext import commands
-from disnake import *
-from disnake.ext.commands import *
-from datetime import datetime, timedelta
-import requests
-import json
-import os
-import asyncio
-import wavelink
-import typing as t 
-from typing import Union
-import youtube_dl
+from yuno_import import *
 
 class AlreadyConnectedToChannel(commands.CommandError):
     pass
@@ -152,7 +140,12 @@ class Music_test(commands.Cog):
         
     @commands.command(name='play', aliases=['play'])
     async def play_cmd(self, ctx, *, query:t.Optional[str]):
-        
+        vc = ctx.me.voice
+        if not vc or not vc.channel:
+            raise NoVoiceChannel
+        player = self.get_player(ctx)
+        if not player.is_connected:
+            await self.embeds_music(ctx, f'Đang rời vì <#{ctx.author.voice.channel.id}>')
     
     @disconnect_cmd.error
     async def connect_error(self, ctx, error):

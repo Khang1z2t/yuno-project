@@ -1,10 +1,4 @@
-import disnake
-from disnake.ext import commands
-from disnake import *
-from disnake.ext.commands import *
-from datetime import datetime, timedelta
-import json
-import os
+from yuno_import import *
 
 class SlashCommand(commands.Cog):
     

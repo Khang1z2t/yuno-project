@@ -1,11 +1,4 @@
-import disnake
-from disnake.ext import commands
-from disnake import *
-from disnake.ext.commands import *
-from datetime import datetime, timedelta
-import requests
-import json
-import os
+from yuno_import import *
 
 class Greetings(commands.Cog):
     

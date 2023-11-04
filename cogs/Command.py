@@ -1,13 +1,4 @@
-import disnake
-from disnake.ext import commands
-from disnake import *
-from disnake.ext.commands import *
-from datetime import datetime, timedelta
-from typing import Union
-import requests
-import json
-import os
-from apiKey import *
+from yuno_import import *
 
 class Command(commands.Cog):
     

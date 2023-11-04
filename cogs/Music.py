@@ -1,13 +1,4 @@
-import disnake
-from disnake.ext import commands
-from disnake import *
-from disnake.ext.commands import *
-from datetime import datetime, timedelta
-import requests
-import json
-import os
-import wavelink
-import youtube_dl
+from yuno_import import *
 
 
 class Music(commands.Cog):
