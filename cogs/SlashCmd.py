@@ -5,15 +5,29 @@ class SlashCommand(commands.Cog):
     def __init__(self, client):
         self.client = client
     
-    @commands.slash_command(
-        name='id',
-        description='Lấy id của người dùng', 
-        options=[Option(name='user', description='Chọn người dùng để lấy ID của họ', type=OptionType.user, required=True)])
-    async def id(self, ctx: disnake.AppCmdInter):
-        user = ctx.options['user']
-        await ctx.response.send_message(f'ID của {user} là: {user.id}')
+    @discord.slash_command(name='id', description='Lấy id từ người dùng')
+    async def get_id(self, ctx, user: Option(discord.Member, "Chọn người dùng", required=True), private: Option(bool, "Chỉ hiển thị với bạn", required=False)):
+        if private:
+            await ctx.respond(f'ID của `` {user.name} `` là: {user.id}', ephemeral=True)
+        else:
+            await ctx.respond(f'ID của `` {user.name} `` là: {user.id}')
 
+    @discord.slash_command(name='add_role', description="Thêm role vào thành viên.")
+    @commands.has_permissions(manage_roles=True)
+    async def add_role(self, ctx, role: discord.Role, user: discord.Member, private: Option(bool, "Chỉ hiển thị với bạn")):
+        await user.add_roles(role)
+        if private:
+            await ctx.respond(f'Đã thêm role {role.name} cho {user.name}', ephemeral=True)
+        else:
+            await ctx.respond(f'Đã thêm role {role.name} cho {user.name}')
+        
+    
+    @discord.slash_command(name = "hello", description = "Say hello to the bot")
+    async def say_hello(self, ctx):
+        await ctx.respond("Hey!")
+    
 
+    
 
 def setup(client):
     client.add_cog(SlashCommand(client))

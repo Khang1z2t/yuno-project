@@ -1,13 +1,17 @@
-import disnake
-from disnake import *
-from disnake.ext import commands
-from disnake.ext.commands import *
-from datetime import datetime, timedelta
+import discord
+from discord import *
+from discord.ext import commands
+from discord.commands import Option
+from discord.ext.commands import *
+from datetime import datetime
+from typing import Union
+import typing as t 
+import wavelink
 import requests
+import asyncio
 import json
 import os
-import asyncio
-import wavelink
-import typing as t 
-from typing import Union
-import youtube_dl
+import re
+
+
+from config import config

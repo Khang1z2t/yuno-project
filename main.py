@@ -1,13 +1,12 @@
 from yuno_import import *
-# API key
-from apiKey import *
 
-client = commands.Bot(command_prefix='!yuno ', intents=disnake.Intents.all())
+client = commands.Bot(command_prefix=config.PREFIX, intents=discord.Intents.all())
+
 
 
 @client.event
 async def on_ready():
-    await client.change_presence(activity=disnake.Game(name='Real Life with Yuno', url='https://youtube.com/@yuno.k?si=JvsrRTZgkGWB_CgM'))
+    await client.change_presence(activity=discord.Game(name='Real Life with Yuno', url='https://youtube.com/@yuno.k?si=JvsrRTZgkGWB_CgM'))
     print('-------------------------------------------')
     print(f'{client.user.name} đã xuất hiện để giúp đỡ bạn.')
     print(f'ID: {client.user.id}')
@@ -20,13 +19,11 @@ initial_extensions = []
 script_dir = os.path.dirname(__file__)  # Lấy thư mục của tệp thực thi
 cogs_dir = os.path.join(script_dir, 'cogs') # Tạo đường dẫn tuyệt đối đến thư mục cogs
 
-for filename in os.listdir(cogs_dir):
-    if filename.endswith('.py'):
-        initial_extensions.append("cogs." + filename[:-3])
+initial_extensions = ["cogs." + filename[:-3] for filename in os.listdir(cogs_dir) if filename.endswith('.py')]
 
 
 if __name__ == '__main__':
     for extension in initial_extensions:
         client.load_extension(extension)
     
-client.run(token)
+client.run(config.TOKEN)

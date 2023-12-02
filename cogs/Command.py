@@ -1,5 +1,6 @@
 from yuno_import import *
 
+from utils import Embeds
 class Command(commands.Cog):
     
     def __init__(self, client):
@@ -13,7 +14,7 @@ class Command(commands.Cog):
       
     # lấy avt người dùng  
     @commands.command()
-    async def avt(self, ctx, user: disnake.User = None):
+    async def avt(self, ctx, user: discord.User = None):
         if user is None:
             if ctx.message.reference:
                 ori_msg = await ctx.fetch_message(ctx.message.reference.message_id)
@@ -21,15 +22,15 @@ class Command(commands.Cog):
             else:
                 user = ctx.author
             
-        embed = disnake.Embed(title=f'{user.name}',color=self.bot_color(ctx))
+        embed = discord.Embed(title=f'{user.name}',color=self.bot_color(ctx))
         if user.avatar is not None:
             ava_url = user.avatar.with_size(1024)
             embed.description = f'[Link tải về]({user.avatar.url})'
         else:
             default_ava = int(user.discriminator) % 5 
-            ava_url = disnake.Asset(url=f'https://cdn.discordapp.com/embed/avatars/{default_ava}.png', key='avatar', state='user1').with_size(1024)
+            ava_url = discord.Asset(url=f'https://cdn.discordapp.com/embed/avatars/{default_ava}.png', key='avatar', state='user1').with_size(1024)
             embed.description = f'Người dùng này không có ảnh đại diện. \nẢnh mặc định: [Link tải về]({ava_url})'
-        embed.set_image(ava_url)
+        embed.set_image(url=ava_url)
         current_time = datetime.now() 
         time = current_time.strftime('%H:%M:%S')
         embed.set_footer(text=f'Bởi: {ctx.author.name} Vào lúc: {time}')
@@ -38,7 +39,7 @@ class Command(commands.Cog):
     # add emoji bằng lệnh 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def add(self, ctx, emoji: disnake.PartialEmoji):
+    async def add(self, ctx, emoji: discord.PartialEmoji):
         if emoji.is_custom_emoji():
             emoji_name = emoji.name
             emoji_data = await emoji.read()
@@ -80,11 +81,14 @@ class Command(commands.Cog):
             color = role.top_role.color
         
         if color:
-            await ctx.reply(f'Role của {role} có màu: {role.color}')
+            await ctx.reply(f'Role của {role.name} có màu: {role.color}')
         else: 
             await ctx.reply('Không tìm thấy role')
     
-
+    @commands.command()
+    async def embed(self, ctx, *, arg=None):
+        embed = await Embeds.create_embed(ctx, arg, Color.red(), None, None, False)
+        await ctx.send(embed=embed)
 
                 
     

@@ -16,7 +16,7 @@ class Admin(commands.Cog):
             return
 
         await ctx.message.delete()
-        embed = disnake.Embed(color=0x9812F0)
+        embed = discord.Embed(color=0x9812F0)
         if msg and msg.startswith('true '):
             anonymous = True
             arg = msg.split(" ", 1)[1] if len(msg.split(" ")) > 1 else None
@@ -32,7 +32,7 @@ class Admin(commands.Cog):
     # kick thành viên
     @commands.command()
     @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx, member: disnake.Member, *, reason=None):
+    async def kick(self, ctx, member: discord.Member, *, reason=None):
         await member.kick(reason=reason)
         await ctx.reply(f'Người dùng {member.mention} đã bị kick ra khỏi sever.')
         
@@ -43,7 +43,7 @@ class Admin(commands.Cog):
     # ban thành viên
     @commands.command()
     @commands.has_permissions(ban_members=True)
-    async def ban(self, ctx, member: disnake.Member, *, reason=None):
+    async def ban(self, ctx, member: discord.Member, *, reason=None):
         await member.ban(reason=reason)
         await ctx.reply(f'Người dùng {member.mention} đã bị ban ra khỏi sever.')
         
@@ -54,7 +54,7 @@ class Admin(commands.Cog):
     # dms một cách bình thường
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def dms(self, ctx, user:disnake.Member, *, arg=None):
+    async def dms(self, ctx, user:discord.Member, *, arg=None):
         await self.send_private_message(ctx, user, arg)
 
 
@@ -69,7 +69,7 @@ class Admin(commands.Cog):
     # add role 
     @commands.command(pass_context = True)
     @commands.bot_has_guild_permissions(manage_roles=True)
-    async def arole(self, ctx, role: disnake.Role, *, user: disnake.Member):
+    async def arole(self, ctx, role: discord.Role, *, user: discord.Member):
         if role in user.roles:
             await ctx.reply(f'{user.mention} đã có role {role}')
         else: 
@@ -83,7 +83,7 @@ class Admin(commands.Cog):
     # remove role
     @commands.command(pass_context = True)
     @commands.bot_has_guild_permissions(manage_roles=True)
-    async def rrole(self, ctx, role: disnake.Role, *, user: disnake.Member):
+    async def rrole(self, ctx, role: discord.Role, *, user: discord.Member):
         if role in user.roles:
             await user.remove_roles(role)
             await ctx.reply(f'Đã xóa role {role} của {user.mention}')
@@ -119,7 +119,7 @@ class Admin(commands.Cog):
         
         if 'meme' in content:
             await message.reply('Nhà ngươi vừa nhắc đến từ dó ư?')
-            embed = disnake.Embed(title=None, color=0x9812f0)
+            embed = discord.Embed(title=None, color=0x9812f0)
             embed.set_image(url='https://meme-api.com/gimme"')
             await message.channel.send(embed)
             
