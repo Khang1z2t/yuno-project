@@ -1,0 +1,3 @@
+pycord
+pycord[voice]
+wavelink
