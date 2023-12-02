@@ -106,241 +106,353 @@ class Music(commands.Cog):
     
     @commands.command(name='join', aliases=['connect', 'connec'], help=config.HELP_JOIN)
     async def join_cmd(self, ctx, channel:t.Optional[discord.VoiceChannel]):
-        self.text_channel = ctx.channel
-        if channel is None:
-            channel = ctx.author.voice.channel
-        
-        node = wavelink.NodePool.get_node()
-        player = node.get_player(ctx.guild)
-        
-        if player is not None:
-            if player.is_connected():
-                embed = await Embeds.create_embed(ctx, f'{self.client.user.name} đang kết nói ở channel <#{channel.id}>', Color.red())
-                await ctx.reply(embed=embed)
-                return
-        await channel.connect(cls=wavelink.Player)
-        embed = await Embeds.create_embed(ctx, f'Đã kết nối đến <#{channel.id}>')
-        await ctx.reply(embed=embed)
+        try:
+            self.text_channel = ctx.channel
+            if channel is None:
+                channel = ctx.author.voice.channel
+            
+            node = wavelink.NodePool.get_node()
+            player = node.get_player(ctx.guild)
+            
+            if player is not None:
+                if player.is_connected():
+                    embed = await Embeds.create_embed(ctx, f'{self.client.user.name} đang kết nói ở channel <#{channel.id}>', Color.red())
+                    await ctx.reply(embed=embed)
+                    return
+            await channel.connect(cls=wavelink.Player)
+            embed = await Embeds.create_embed(ctx, f'Đã kết nối đến <#{channel.id}>')
+            await ctx.reply(embed=embed)
+        except Exception as e:
+            print(e)
+            return
         
     
     @commands.command(name='leave', aliases=['disconnect', 'disc'], help=config.HELP_LEAVE)
     async def leave_cmd(self, ctx):
-        if not ctx.author.voice:
-            await ctx.reply(
-                embed = await Embeds.Music_checks.check_join(ctx)
+        try:
+            if not ctx.author.voice:
+                await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                    )
+                return
+            
+            if not ctx.voice_client:
+                await ctx.reply(
+                    embed = await Embeds.Music_checks.check_disconnect(ctx)
                 )
+                return
+            
+            if ctx.author.voice and ctx.voice_client.channel != ctx.author.voice.channel:
+                embed = await Embeds.create_embed(ctx, f'{self.client.user.name} đang kết nối ở channel <#{ctx.voice_client.channel.id}>', Color.red())
+                await ctx.reply(embed=embed)
+            else:
+                embed = await Embeds.create_embed(ctx, f'Đã rời khỏi channel <#{ctx.voice_client.channel.id}>')
+                await ctx.reply(embed=embed)
+                await ctx.voice_client.disconnect()
+        except Exception as e:
+            print(e)
             return
-        
-        if not ctx.voice_client:
-            await ctx.reply(
-                embed = await Embeds.Music_checks.check_disconnect(ctx)
-            )
-            return
-        
-        if ctx.author.voice and ctx.voice_client.channel != ctx.author.voice.channel:
-            embed = await Embeds.create_embed(ctx, f'{self.client.user.name} đang kết nối ở channel <#{ctx.voice_client.channel.id}>', Color.red())
-            await ctx.reply(embed=embed)
-        else:
-            embed = await Embeds.create_embed(ctx, f'Đã rời khỏi channel <#{ctx.voice_client.channel.id}>')
-            await ctx.reply(embed=embed)
-            await ctx.voice_client.disconnect()
-    
     
     @commands.command(name='play', aliases=['p'], help=config.HELP_PLAY)
     async def play_cmd(self, ctx, *, song: str = None):
-        self.text_channel = ctx.channel
-        self.requester = ctx.author
-        if song is None:
-            embed = await Embeds.create_embed(ctx, f'Vui lòng nhập tên bài hát hoặc link', Color.red())
-            await ctx.reply(embed=embed)
-            return
-        
-        if not getattr(ctx.author.voice, 'channel', None):
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_join(ctx)
-            )
-        
-        if not ctx.voice_client:
-            vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
-        else:
-            vc: wavelink.Player = ctx.voice_client
-        
-        if vc.is_paused() is True:
-            await vc.resume()
-        
-        if vc.queue.is_empty and not vc.is_playing():
-            try:
-                songs = await wavelink.YouTubeTrack.search(song)
-                song = songs[0]
-            except Exception:
+        try:
+            self.text_channel = ctx.channel
+            self.requester = ctx.author
+            if song is None:
+                embed = await Embeds.create_embed(ctx, f'Vui lòng nhập tên bài hát hoặc link', Color.red())
+                await ctx.reply(embed=embed)
+                return
+            
+            if not getattr(ctx.author.voice, 'channel', None):
                 return await ctx.reply(
-                    embed = await Embeds.create_embed(ctx, f'Không tìm thấy bài hát nào có tên {song}', Color.red())
+                    embed = await Embeds.Music_checks.check_join(ctx)
                 )
             
-            if int(song.duration) > 18000000:
-                return await ctx.reply(
-                    embed = await Embeds.create_embed(ctx, f'Bài hát dài quá dài, vui lòng chọn bài khác.')
-                )
+            if not ctx.voice_client:
+                vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
+            else:
+                vc: wavelink.Player = ctx.voice_client
             
-            await vc.play(song)
-            embed = await Embeds.music_embed(ctx, f'{song}', f'{song.uri}', f'{song.thumbnail}', 
-                                             f'`{song.author}` | `{Embeds.get_time(song.duration)}` | <@{ctx.author.id}>')
-            await ctx.reply(embed=embed, mention_author=False)
-        
-        else:
-            try:
-                songs = await wavelink.YouTubeTrack.search(song)
-                song = songs[0]
-            except Exception:
-                return await ctx.reply(
-                    embed = await Embeds.create_embed(ctx, f'Không tìm thấy bài hát nào có tên {song}', Color.red())
-                )
+            if vc.is_paused() is True:
+                await vc.resume()
             
-            if int(song.duration) > 18000000:
-                return await ctx.reply(
-                    embed = await Embeds.create_embed(ctx, f'Bài hát dài quá dài, vui lòng chọn bài khác.')
-                )
-            
-            await vc.queue.put_wait(song)
-            embed = await Embeds.music_embed(ctx, f'{song}', f'{song.uri}', f'{song.thumbnail}', f'Đã thêm vào danh sách phát')
-            await ctx.reply(embed=embed, mention_author=False)
-            
-        vc.ctx = ctx
-        if not hasattr(vc, "loop"):
-            setattr(vc, "loop", False)
-        if not hasattr(vc, "previous"):
-            setattr(vc, "previous", None)
+            if vc.queue.is_empty and not vc.is_playing():
+                try:
+                    songs = await wavelink.YouTubeTrack.search(song)
+                    song = songs[0]
+                except Exception:
+                    return await ctx.reply(
+                        embed = await Embeds.create_embed(ctx, f'Không tìm thấy bài hát nào có tên {song}', Color.red())
+                    )
                 
+                if int(song.duration) > 18000000:
+                    return await ctx.reply(
+                        embed = await Embeds.create_embed(ctx, f'Bài hát dài quá dài, vui lòng chọn bài khác.')
+                    )
+                
+                await vc.play(song)
+                embed = await Embeds.music_embed(ctx, f'{song}', f'{song.uri}', f'{song.thumbnail}', 
+                                                f'`{song.author}` | `{Embeds.get_time(song.duration)}` | <@{ctx.author.id}>')
+                await ctx.reply(embed=embed, mention_author=False)
+            
+            else:
+                try:
+                    songs = await wavelink.YouTubeTrack.search(song)
+                    song = songs[0]
+                except Exception:
+                    return await ctx.reply(
+                        embed = await Embeds.create_embed(ctx, f'Không tìm thấy bài hát nào có tên {song}', Color.red())
+                    )
+                
+                if int(song.duration) > 18000000:
+                    return await ctx.reply(
+                        embed = await Embeds.create_embed(ctx, f'Bài hát dài quá dài, vui lòng chọn bài khác.')
+                    )
+                
+                await vc.queue.put_wait(song)
+                embed = await Embeds.music_embed(ctx, f'{song}', f'{song.uri}', f'{song.thumbnail}', f'Đã thêm vào danh sách phát')
+                await ctx.reply(embed=embed, mention_author=False)
+                
+            vc.ctx = ctx
+            if not hasattr(vc, "loop"):
+                setattr(vc, "loop", False)
+            if not hasattr(vc, "previous"):
+                setattr(vc, "previous", None)
+        except Exception as e:
+            print(e)
+            return
+                
+    
     @commands.command(name='pause', aliases=['pa'], help=config.HELP_PAUSE)
     async def pause_cmd(self, ctx):
-        if not getattr(ctx.author.voice, 'channel', None):
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_join(ctx)
-            )
-        elif not ctx.guild.voice_client:
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_connected(ctx)
-            )
-        else:
-            vc: wavelink.Player = ctx.voice_client
-        
-        if vc.is_playing() is False:
-            return await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Không có bài nào đang phát', Color.red())
-            )
-        
-        if vc.is_paused() == False:
-            await vc.pause()
-            await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Đã tạm dừng bài hát'), mention_author=False
-            )
-        else:
-            return await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Bài hát đã được tạm dừng', Color.red())
-            )
+        try:
+            if not getattr(ctx.author.voice, 'channel', None):
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                )
+            elif not ctx.guild.voice_client:
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_connected(ctx)
+                )
+            else:
+                vc: wavelink.Player = ctx.voice_client
+            
+            if vc.is_playing() is False:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Không có bài nào đang phát', Color.red())
+                )
+            
+            if vc.is_paused() == False:
+                await vc.pause()
+                await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Đã tạm dừng bài hát'), mention_author=False
+                )
+            else:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Bài hát đã được tạm dừng', Color.red())
+                )
+        except Exception as e:
+            print(e)
+            return
      
     
     @commands.command(name='resume', aliases=['re'], help=config.HELP_RESUME)
     async def resume_cmd(self, ctx):
-        if not getattr(ctx.author.voice, 'channel', None):
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_join(ctx)
+        try:
+            if not getattr(ctx.author.voice, 'channel', None):
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                    )
+            elif not ctx.guild.voice_client:
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_connected(ctx)
                 )
-        elif not ctx.guild.voice_client:
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_connected(ctx)
-            )
-        else:
-            vc: wavelink.Player = ctx.voice_client
-        
-        if vc.is_paused() == True:
-            await vc.resume()
-            embed = await Embeds.create_embed(ctx, f'Đã tiếp tục bài hát')
-            await ctx.reply(embed=embed, mention_author=False)
-        else:
-            return await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Bài hát đã được phát', Color.red())
-            )
+            else:
+                vc: wavelink.Player = ctx.voice_client
+            
+            if vc.is_paused() == True:
+                await vc.resume()
+                embed = await Embeds.create_embed(ctx, f'Đã tiếp tục bài hát')
+                await ctx.reply(embed=embed, mention_author=False)
+            else:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Bài hát đã được phát', Color.red())
+                )
+        except Exception as e:
+            print(e)
+            return
             
     
     @commands.command(name='skip', aliases=['sk'], help=config.HELP_SKIP)
     async def skip_cmd(self, ctx):
-        if not getattr(ctx.author.voice, 'channel', None):
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_join(ctx)
+        try:
+            if not getattr(ctx.author.voice, 'channel', None):
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                    )
+            elif not ctx.guild.voice_client:
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_connected(ctx)
                 )
-        elif not ctx.guild.voice_client:
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_connected(ctx)
+            else:
+                vc: wavelink.Player = ctx.voice_client
+            
+            if vc.queue.is_empty:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Không có bài nào trong danh sách phát', Color.red())
+                )
+            
+            if vc.loop:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Vui lòng tắt lặp lại bài hát trước khi bỏ qua bài hát', Color.red())
+                )
+            
+            track = vc.current
+            vc.previous = track
+            
+            position = int(vc.current.duration) * 10000 
+            await vc.seek(position=position)
+            await ctx.reply(
+                embed = await Embeds.create_embed(ctx, f'Đã bỏ qua bài hát'), mention_author=False
             )
-        else:
-            vc: wavelink.Player = ctx.voice_client
+        except Exception as e:
+            print(e)
+            return
         
-        if vc.queue.is_empty:
-            return await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Không có bài nào trong danh sách phát', Color.red())
-            )
-        
-        if vc.loop:
-            return await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Vui lòng tắt lặp lại bài hát trước khi bỏ qua bài hát', Color.red())
-            )
-        
-        track = vc.current
-        vc.previous = track
-        
-        position = int(vc.current.duration) * 10000 
-        await vc.seek(position=position)
-        await ctx.reply(
-            embed = await Embeds.create_embed(ctx, f'Đã bỏ qua bài hát'), mention_author=False
-        )
+    
+    @commands.command(name='previous', aliases=['pre'], help=config.HELP_PREVIOUS)
+    async def previous_cmd(self, ctx):
+        try:
+            if not getattr(ctx.author.voice, 'channel', None):
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                    ) 
+            elif not ctx.guild.voice_client:
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_connected(ctx)
+                )
+            else:
+                vc: wavelink.Player = ctx.voice_client
+
+            if vc.loop:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Vui lòng tắt lặp lại bài hát trước khi quay lại bài hát', Color.red())
+                )
+            
+            if vc.previous is not None:
+                vc.queue.put_at_front(vc.current)
+                vc.queue.put_at_front(vc.previous)
+                
+                postition = int(vc.previous.duration) * 10000
+                await vc.seek(position=postition)
+                
+                vc.previous = None
+                
+                await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Đã quay lại bài hát trước'), mention_author=False
+                )
+            else:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Không có bài hát trước đó', Color.red())
+                )
+            
+        except Exception as e:
+            print(e)
+            return
+            
     
     
     @commands.command(name='stop', aliases=['st'], help=config.HELP_STOP)
     async def stop_cmd(self, ctx):
-        if not getattr(ctx.author.voice, 'channel', None):
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_join(ctx)
-                ) 
-        elif not ctx.guild.voice_client:
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_connected(ctx)
-            )
-        else:
-            vc: wavelink.Player = ctx.voice_client
+        try:
+            if not getattr(ctx.author.voice, 'channel', None):
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                    ) 
+            elif not ctx.guild.voice_client:
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_connected(ctx)
+                )
+            else:
+                vc: wavelink.Player = ctx.voice_client
+                
+            if not vc.is_playing():
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Không có bài nào đang phát', Color.red())
+                )    
             
-        if not vc.is_playing():
-            return await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Không có bài nào đang phát', Color.red())
-            )    
-        
-        await vc.stop()
-        await vc.disconnect()
+            await vc.stop()
+            await vc.disconnect()
+        except Exception as e:
+            print(e)
+            return
+
 
     @commands.command(name='loop', aliases=['l'], help=config.HELP_LOOP)
     async def loop_cmd(self, ctx):
-        if not getattr(ctx.author.voice, 'channel', None):
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_join(ctx)
+        try:
+            if not getattr(ctx.author.voice, 'channel', None):
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                    )
+            elif not ctx.guild.voice_client:
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_connected(ctx)
                 )
-        elif not ctx.guild.voice_client:
-            return await ctx.reply(
-                embed = await Embeds.Music_checks.check_connected(ctx)
-            )
-        else:
-            vc: wavelink.Player = ctx.voice_client
-        
-        if vc.loop:
-            vc.loop = False
-            await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Đã tắt lặp lại bài hát'), mention_author=False
-            )
-        else:
-            vc.loop = True
-            await ctx.reply(
-                embed = await Embeds.create_embed(ctx, f'Đã bật lặp lại bài hát'), mention_author=False
-            )
+            else:
+                vc: wavelink.Player = ctx.voice_client
+                
+            if vc.is_playing() is False:
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Không có bài nào đang phát', Color.red())
+                )    
             
+            if vc.loop:
+                vc.loop = False
+                await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Đã tắt lặp lại bài hát'), mention_author=False
+                )
+            else:
+                vc.loop = True
+                await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Đã bật lặp lại bài hát'), mention_author=False
+                )
+        except Exception as e:
+            print(e)
+            return
+    
+    
+    @commands.command(name='volume', aliases=['vol', 'v'], help=config.HELP_VOLUME)
+    async def volume_cmd(self, ctx, volume: int = None):
+        try:
+            if not getattr(ctx.author.voice, 'channel', None):
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_join(ctx)
+                    )
+            elif not ctx.guild.voice_client:
+                return await ctx.reply(
+                    embed = await Embeds.Music_checks.check_connected(ctx)
+                )
+            else:
+                vc: wavelink.Player = ctx.voice_client
+                
+            if (volume is None) or (type(volume) is not int):
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Vui lòng nhập âm lượng chính xác', Color.red())
+                )
+            
+            if not(0 <= volume <= 100):
+                return await ctx.reply(
+                    embed = await Embeds.create_embed(ctx, f'Vui lòng nhập âm lượng từ 0 đến 200', Color.red())
+                )
+            
+            await vc.set_volume(volume)
+            await ctx.reply(
+                embed = await Embeds.create_embed(ctx, f'Đã thay đổi âm lượng thành {volume}'), mention_author=False
+            )
+        except Exception as e:
+            print(e)
+            return
             
             
         
