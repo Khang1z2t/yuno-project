@@ -1,4 +1,4 @@
-TOKEN = 'MTE2MzAxOTg4Mjc5NTkwOTE2Mg.Gm9axO.EouvQc_d7BeJ5-uf5EVehf2JKG9BsrdE0Ncplg'
+TOKEN = ''
 SPOTIFY_ID: str = ''
 SPOTIFY_SECRET: str = ''
 
