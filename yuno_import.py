@@ -5,6 +5,7 @@ from discord.commands import Option
 from discord.ext.commands import *
 from datetime import datetime
 from typing import Union
+from wavelink.ext import spotify
 import typing as t 
 import wavelink
 import requests

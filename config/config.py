@@ -1,4 +1,4 @@
-TOKEN = ''
+TOKEN = 'MTE2MzAxOTg4Mjc5NTkwOTE2Mg.GSjsN8.8NLkEA5v2Jj677HhquH_2nFpNfMGL7hIVzOaR0'
 SPOTIFY_ID: str = ''
 SPOTIFY_SECRET: str = ''
 
@@ -10,11 +10,12 @@ VC_TIMEOUT = 600
 VC_TIMEOUT_DEFAULT = True
 ALLOW_VC_TIMEOUT_EDIT = True
 
-# lavalink custome
-LAVALINK_URI = 'http://localhost:2333'
-LAVALINK_PASS = 'yuno.k'
-LAVALINK_SECURE = False
-LAVALINK_USE_HTTP = True
+# nodes custom
+NODES = [
+    {'name' : 'Default', 'uri' : 'http://localhost:8888', 'pass': 'yuno.k', 'secure': False, 'use_http': True},
+    {'name' : 'SirPlanCake', 'uri' : 'http://lava-v3.sirplancake.dev:2334', 'pass': 'e0krPn7)yX<@j=REb!x?dWtY', 'secure': False, 'use_http': True},
+    {'name' : 'Darren', 'uri' : 'http://n1.ll.darrennathanael.com:2269', 'pass' : 'glasshost1984', 'secure': False, 'use_http': True}
+]
 
 # music help
 HELP_PLAY = 'Phát âm thanh từ link hoặc tên'

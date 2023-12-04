@@ -14,19 +14,25 @@ class Music(commands.Cog):
         
         
     async def node_connect(self):
-        await self.client.wait_until_ready()
-        
-        node: wavelink.Node = wavelink.Node(
-            uri = config.LAVALINK_URI,
-            password = config.LAVALINK_PASS,
-            secure = config.LAVALINK_SECURE,
-            use_http = config.LAVALINK_USE_HTTP
-        )
-        
-        await wavelink.NodePool.connect(
-            client = self.client,
-            nodes = [node]
-        )
+        try:
+            await self.client.wait_until_ready()
+            
+            nodes = config.NODES[2] # Default node = 0
+            node: wavelink.Node = wavelink.Node(
+                uri = nodes['uri'],
+                password = nodes['pass'],
+                secure=nodes['secure'],
+                use_http=nodes['use_http']
+            )
+            
+            await wavelink.NodePool.connect(
+                client = self.client,
+                nodes = [node]
+            )
+        except Exception as e:
+            return self.text_channel.send(
+                embed = await Embeds.create_embed(self.text_channel, f'```{e}```\n\nKhông thể kết nối đến máy chủ phát nhạc \nVui lòng thay đổi máy chủ âm nhạc ``/nodes``', Color.red())
+            )
     
     
     @commands.Cog.listener()
@@ -61,6 +67,7 @@ class Music(commands.Cog):
                 except Exception as e:
                     print(e)
                     return
+    
     
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, payload: wavelink.TrackEventPayload):
@@ -103,6 +110,7 @@ class Music(commands.Cog):
         except Exception as e:
             print(e)
             return
+    
     
     @commands.command(name='join', aliases=['connect', 'connec'], help=config.HELP_JOIN)
     async def join_cmd(self, ctx, channel:t.Optional[discord.VoiceChannel]):
@@ -152,6 +160,7 @@ class Music(commands.Cog):
         except Exception as e:
             print(e)
             return
+    
     
     @commands.command(name='play', aliases=['p'], help=config.HELP_PLAY)
     async def play_cmd(self, ctx, *, song: str = None):
@@ -441,7 +450,7 @@ class Music(commands.Cog):
                     embed = await Embeds.create_embed(ctx, f'Vui lòng nhập âm lượng chính xác', Color.red())
                 )
             
-            if not(0 <= volume <= 100):
+            if not(0 <= volume <= 200):
                 return await ctx.reply(
                     embed = await Embeds.create_embed(ctx, f'Vui lòng nhập âm lượng từ 0 đến 200', Color.red())
                 )
@@ -455,6 +464,31 @@ class Music(commands.Cog):
             return
             
             
+    @discord.slash_command(name='nodes', description='Thay đổi máy chủ phát nhạc')
+    async def slash_nodes(self, ctx, node_name: Option(str, "Chọn máy chủ phát nhạc", choices=[node['name'] for node in config.NODES])):
+        try:
+            for nodes in config.NODES:
+                if str(nodes['name']) == node_name:
+                    node: wavelink.Node = wavelink.Node(
+                        uri = nodes['uri'],
+                        password = nodes['pass'],
+                        secure = nodes['secure'],
+                        use_http = nodes['use_http']
+                    )
+                    await wavelink.NodePool.connect(client = self.client, nodes = [node])
+                    await ctx.respond(
+                        embed = await Embeds.create_embed(ctx, f'Đã thay đổi máy chủ phát nhạc thành ``{node_name}``')
+                    )
+                    return
+            await ctx.respond(
+                embed = await Embeds.create_embed(ctx, f'Không tìm thấy máy chủ phát nhạc ``{node_name}``', Color.red())
+                )
+
+        except Exception as e:
+            print(e)
+            return
+    
+        
         
 def setup(client):
     client.add_cog(Music(client))

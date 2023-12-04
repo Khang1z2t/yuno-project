@@ -102,40 +102,7 @@ class Admin(commands.Cog):
             await ctx.reply('Nhà ngươi làm gì có tư cách đó.')
     
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        content = message.content.lower()
-        if message.author == client.User:
-            return
-        
-        if 'fuck' in content:
-            await message.delete()
-            reply = f'{message.author.mention}, cẩn thận miệng lưỡi của mình đấy!!'
-            await message.channel.send(reply)
-            return
-        
-        if 'memaybeo' in content:
-            await message.reply(f'Có mày béo đấy {message.author.mention}!!')
-        
-        if 'meme' in content:
-            await message.reply('Nhà ngươi vừa nhắc đến từ dó ư?')
-            embed = discord.Embed(title=None, color=0x9812f0)
-            embed.set_image(url='https://meme-api.com/gimme"')
-            await message.channel.send(embed)
-            
-        
-        if content == 'hi yuno':
-            if message.author.id == 628955171107635259:
-                response = 'Đừng tự kỷ nữa bro.'
-            elif message.author.id == 675242305350926358:
-                response = 'Lô Quân béo'
-            elif message.author.id == 1037390417399906436:
-                response = 'Ya Halo Nahihi'
-            else:
-                response = f'Chào bạn nhé mình là {self.client.user.name}. Chúc bạn có một ngày vui vẻ'
-            await message.reply(response)
-        
-        # await client.invoke(message)    
+    
     
     
     
